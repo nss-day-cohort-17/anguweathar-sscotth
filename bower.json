@@ -1,0 +1,22 @@
+{
+  "name": "anguweathar-sscotth",
+  "homepage": "https://github.com/nss-day-cohort-17/anguweathar-sscotth",
+  "authors": [
+    "Scott Humphries <git@sscotth.io>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "^1.6.1",
+    "bootstrap": "^3.3.7",
+    "angular-route": "^1.6.1"
+  }
+}
