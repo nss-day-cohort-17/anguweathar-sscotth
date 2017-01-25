@@ -17,6 +17,7 @@
   "dependencies": {
     "angular": "^1.6.1",
     "bootstrap": "^3.3.7",
-    "angular-route": "^1.6.1"
+    "angular-route": "^1.6.1",
+    "firebase": "^3.6.7"
   }
 }
