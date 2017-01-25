@@ -12,11 +12,14 @@ angular
     })
 
     const checkForAuth = {
-      checkForAuth: function ($location) {
-        console.log('This will fire just before the WeatherCtrl')
-        if (firebase.auth().currentUser === null) {
-          $location.url('/')
-        }
+      checkForAuth ($location) {
+        // http://stackoverflow.com/questions/37370224/firebase-stop-listening-onauthstatechanged
+        const authReady = firebase.auth().onAuthStateChanged(user => {
+          authReady()
+          if (!user) {
+            $location.url('/')
+          }
+        })
       }
     }
 
@@ -32,18 +35,10 @@ angular
         // resolve takes an object with a function inside
         // https://docs.angularjs.org/api/ngRoute/provider/$routeProvider#when
       })
-  })
-  .run(($location) => {
-    console.log('Run Executing')
-
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        // ???
-        console.log('Logged In', user)
-      } else {
-
-      }
-    })
+      .when('/login', {
+        controller: 'LoginCtrl',
+        templateUrl: '/partials/login.html',
+      })
   })
   .controller('RootCtrl', function ($scope, $location) {
     console.log('I am a RootCtrl')
@@ -61,6 +56,11 @@ angular
         $scope.city = weather.city
       })
   })
+  .controller('LoginCtrl', function ($scope, $location, authFactory) {
+    $scope.login = () => authFactory
+      .login($scope.email, $scope.password)
+      .then(() => $location.url('/'))
+  })
   .factory('weatherFactory', ($http) => {
     return {
       getWeather (zipcode) {
@@ -72,5 +72,17 @@ angular
             })
           )
       },
+    }
+  })
+  .factory('authFactory', ($q) => {
+    return {
+      login (email, pass) {
+        // converts native ES6 promise to angular promise so no $scope.$apply needed
+        return $q.resolve(firebase.auth().signInWithEmailAndPassword(email, pass))
+      },
+
+      getUserId () {
+        return firebase.auth().currentUser.uid
+      }
     }
   })
