@@ -11,18 +11,6 @@ angular
       messagingSenderId: "936314115006"
     })
 
-    const checkForAuth = {
-      checkForAuth ($location) {
-        // http://stackoverflow.com/questions/37370224/firebase-stop-listening-onauthstatechanged
-        const authReady = firebase.auth().onAuthStateChanged(user => {
-          authReady()
-          if (!user) {
-            $location.url('/')
-          }
-        })
-      }
-    }
-
     $routeProvider
       .when('/', {
         controller: 'RootCtrl',
@@ -31,7 +19,11 @@ angular
       .when('/weather/:zipcode', {
         controller: 'WeatherCtrl',
         templateUrl: '/partials/weather.html',
-        resolve: checkForAuth
+        resolve: {
+          weather: ($route, weatherFactory) =>
+            weatherFactory.getWeather($route.current.params.zipcode),
+          user: authFactory => authFactory.getUser(),
+        }
         // resolve takes an object with a function inside
         // https://docs.angularjs.org/api/ngRoute/provider/$routeProvider#when
       })
@@ -40,21 +32,18 @@ angular
         templateUrl: '/partials/login.html',
       })
   })
+  .run(($location, $rootScope) => {
+    $rootScope.$on('$routeChangeError', console.log)
+  })
   .controller('RootCtrl', function ($scope, $location) {
     console.log('I am a RootCtrl')
-    console.log('Current user', firebase.auth().currentUser)
     $scope.gotoWeather = () => $location.url(`/weather/${$scope.zip}`)
   })
-  .controller('WeatherCtrl', function ($scope, $routeParams, weatherFactory) {
+  .controller('WeatherCtrl', function ($scope, $routeParams, weather, user) {
     console.log('I am a WeatherCtrl')
-    console.log('Current user', firebase.auth().currentUser)
 
-    weatherFactory
-      .getWeather($routeParams.zipcode)
-      .then((weather) => {
-        $scope.temperature = weather.temp
-        $scope.city = weather.city
-      })
+    $scope.temperature = weather.temp
+    $scope.city = weather.city
   })
   .controller('LoginCtrl', function ($scope, $location, authFactory) {
     $scope.login = () => authFactory
@@ -81,8 +70,17 @@ angular
         return $q.resolve(firebase.auth().signInWithEmailAndPassword(email, pass))
       },
 
-      getUserId () {
-        return firebase.auth().currentUser.uid
+      getUser () {
+        return $q((resolve, reject) => {
+          const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+            unsubscribe()
+            if (user) {
+              resolve(user)
+            } else {
+              reject()
+            }
+          })
+        })
       }
     }
   })
