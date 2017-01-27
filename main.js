@@ -31,7 +31,11 @@ angular
       .when('/weather/:zipcode', {
         controller: 'WeatherCtrl',
         templateUrl: '/partials/weather.html',
-        resolve: checkForAuth
+        resolve: {
+          weather (weatherFactory, $route) {
+            return weatherFactory.getWeather($route.current.params.zipcode)
+          },
+        }
         // resolve takes an object with a function inside
         // https://docs.angularjs.org/api/ngRoute/provider/$routeProvider#when
       })
@@ -45,16 +49,12 @@ angular
     console.log('Current user', firebase.auth().currentUser)
     $scope.gotoWeather = () => $location.url(`/weather/${$scope.zip}`)
   })
-  .controller('WeatherCtrl', function ($scope, $routeParams, weatherFactory) {
+  .controller('WeatherCtrl', function ($scope, weather) {
     console.log('I am a WeatherCtrl')
     console.log('Current user', firebase.auth().currentUser)
 
-    weatherFactory
-      .getWeather($routeParams.zipcode)
-      .then((weather) => {
-        $scope.temperature = weather.temp
-        $scope.city = weather.city
-      })
+    $scope.temperature = weather.temp
+    $scope.city = weather.city
   })
   .controller('LoginCtrl', function ($scope, $location, authFactory) {
     $scope.login = () => authFactory
